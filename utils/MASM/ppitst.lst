@@ -1,0 +1,111 @@
+Microsoft (R) Macro Assembler Version 6.11d		    02/02/10 18:37:21
+ppitst.asm						     Page 1 - 1
+
+
+				.model tiny
+ 0000				.code
+
+ = E000				ROM     equ     0E000h
+ = 0A00				PPI     equ     0A00h  ;depends on your Yx select of the 3-to-8
+ = 0A00				PORTA   equ     PPI+0
+ = 0A01				PORTB   equ     PPI+1
+ = 0A02				PORTC   equ     PPI+2
+ = 0A03				PPICTL  equ     PPI+3
+
+				        org     0800h
+ 0800				main    proc
+ 0800				init:
+ 0800  B0 80			        mov     al,10000000b    ;configuration word for the 8255
+				                                ;both group A and B = mode 0
+				                                ;port A = input
+				                                ;port B = output
+				                                ;port C = input
+ 0802  BA 0A03			        mov     dx,PPICTL
+ 0805  EE			        out     dx,al         ;send the configuration word 
+ 0806				toggle_lo:
+ 0806  90			        nop
+ 0807  90			        nop
+ 0808  B0 00			        mov     al,0            ;all port A lines to logic low
+ 080A  BA 0A00			        mov     dx,PORTA
+ 080D  EE			        out     dx,al
+ 080E  90			        nop
+ 080F  90			        nop
+ 0810  B0 00			        mov     al,0            ;all port B lines to logic low
+ 0812  BA 0A01			        mov     dx,PORTB
+ 0815  EE			        out     dx,al
+ 0816  90			        nop
+ 0817  90			        nop
+ 0818  B0 00			        mov     al,0            ;all port C lines to logic low
+ 081A  BA 0A02			        mov     dx,PORTC
+ 081D  EE			        out     dx,al
+
+ 081E				toggle_hi:
+ 081E  90			        nop
+ 081F  90			        nop
+ 0820  B0 FF			        mov     al,0ffh         ;now all port A lines to logic high
+ 0822  BA 0A00			        mov     dx,PORTA
+ 0825  EE			        out     dx,al
+ 0826  90			        nop
+ 0827  90			        nop
+ 0828  B0 FF			        mov     al,0ffh         ;now all port B lines to logic high
+ 082A  BA 0A01			        mov     dx,PORTB
+ 082D  EE			        out     dx,al
+ 082E  90			        nop
+ 082F  90			        nop
+ 0830  B0 FF			        mov     al,0ffh         ;now all port C lines to logic high
+ 0832  BA 0A02			        mov     dx,PORTC
+ 0835  EE			        out     dx,al
+				        
+ 0836  A2 03E8			        mov     ds:[1000],al   ; bogus write to RAM for test reasons      
+ 0839  EB CB			        jmp     toggle_lo      ;keep doing this forever
+
+ 083B				main    endp
+						end
+						
+Microsoft (R) Macro Assembler Version 6.11d		    02/02/10 18:37:21
+ppitst.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_TEXT  . . . . . . . . . . . . .	16 Bit	 083B	  Word	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'DATA'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+main . . . . . . . . . . . . . .	P Near	 0800	  _TEXT	Length= 003B Public
+  init . . . . . . . . . . . . .	L Near	 0800	  _TEXT	
+  toggle_lo  . . . . . . . . . .	L Near	 0806	  _TEXT	
+  toggle_hi  . . . . . . . . . .	L Near	 081E	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0001h	 
+@code  . . . . . . . . . . . . .	Text   	 DGROUP
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+PORTA  . . . . . . . . . . . . .	Number	 0A00h	 
+PORTB  . . . . . . . . . . . . .	Number	 0A01h	 
+PORTC  . . . . . . . . . . . . .	Number	 0A02h	 
+PPICTL . . . . . . . . . . . . .	Number	 0A03h	 
+PPI  . . . . . . . . . . . . . .	Number	 0A00h	 
+ROM  . . . . . . . . . . . . . .	Number	 E000h	 
+
+	   0 Warnings
+	   0 Errors

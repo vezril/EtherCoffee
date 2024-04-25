@@ -1,0 +1,25 @@
+ULTIBOARD DRILL REPORT
+
+Design: PSU(PSU)
+
+DRILL FILE SETTINGS
+Excellon 2, Absolute, Inch, 2.5 
+
+
+DEFINITION COPPER LAYERS
+Copper Top
+Copper Bottom
+
+
+--------------------------------------------------------------------
+
+DRILLFILE                              LAMINATION
+PSU(PSU)Copper Top-Copper Bottom.drl   Copper Top .. Copper Bottom
+
+TOOL     SIZE   TYPE  COUNT
+   1  0.03500    PTH     17
+   2  0.07874    PTH      4
+   3  0.04724    PTH      8
+   4  0.03917    PTH      2
+   5  0.03333    PTH      2
+   6  0.04667    PTH      6

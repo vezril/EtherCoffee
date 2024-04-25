@@ -1,0 +1,259 @@
+  ***  TCAP console I/O capture utility  ***
+  Version 3.0. Freeware. TCAP written by Tim D. Kannel
+  Copyright(c) 1998 Tim Kannel
+
+  Distribution
+  -------------------
+  This program is freeware. Distribute as much as you want, as long as
+  the required files are present and without modification. The required
+  files are TCAP.COM and READ.ME (this file).
+  The API package (API.ZIP and the files it contains) is not required
+  in distributions of TCAP, but cannot be distributed independently
+  of TCAP. If the API package is included, the only required file
+  is API.TXT.
+  -------------------
+
+  Contents
+  --------
+  - Disclaimer
+  - Description of TCAP
+  - Single-Program Console Capture
+  - Making Programs TCAP-aware (TCAP API)
+  - Known bugs
+  - Changes since version 2.0
+  - Changes since version 1.0
+  - Author Contact Information
+  - Getting the latest version of TCAP
+  - Other programs from the author
+
+  Note to users of previous versions of TCAP:
+    The default name of the capture file is now TCAP.TXT,
+    not (the rather generic and somewhat incorrect name) OUTPUT.TXT.
+    There are also a couple new features and some important bug fixes.
+
+  Disclaimer
+  ----------
+    The author of this program is not liable for any damage caused by
+  use of this program. Due to the nature of this program (a TSR/background
+  utility) your system could potentially become unstable, so use with caution.
+
+  Description
+  -----------
+    TCAP is a text capturing utility. Console I/O is copied to a file.
+  TCAP's purpose is somewhat like the "script" program available on
+  Unix systems, with respect to its ability to log text from the console
+  while it is running. It can remain resident in memory (i.e., as a TSR
+  program) to capture text from several programs or commands, or capture
+  text from a single program. Both program output and text input by the user
+  are captured. Captured text input does not include editing characters,
+  such as backspaces, only the final text is captured. TCAP captures text
+  from both standard-out and standard-error.
+    The text capture is to a file specified by the user on the command-line,
+  and starts as soon as TCAP exits to DOS. The capture ends when TCAP
+  is removed from memory with the "/U" uninstall command-line switch.
+  The text capture can also be turned on or off at other times as
+  described below.
+    File output is buffered; several methods are used to make sure that
+  the buffer can be written to disk as often as necessary. The size of
+  TCAP's internal buffer can be specified on the command-line. In the
+  event that the buffer was not large enough to capture everything a
+  warning message will be displayed when TCAP is uninstalled, and TCAP
+  will exit to DOS with a nonzero return value ("errorlevel"). If this
+  happens increase the buffer size. The default buffer size is 8 KB, but
+  the minimum size of 4 KB should be large enough to avoid an incomplete
+  capture.
+    Note that bell characters (ASCII 7) are converted to spaces, so no
+  beep will be emitted and the bell character will not appear in the
+  capture file.
+
+  Usage information:
+
+    TCAP [options] [filename] [/C command [parameters]]
+         /?       display a help screen
+         /B=size  specify Buffer size in kilobytes
+                  (minimum=4, maximum=64, default=8)
+         /ON      turn capturing ON
+         /OFF     turn capturing OFF
+         /N       No filename swap (with /C option only)
+         /U       stop text capture and Uninstall TCAP
+         filename specify the name of the capture file
+                  (defaults to TCAP.TXT)
+         /C       run and capture text from 'command', using the
+                  indicated parameters
+
+  The /C option is explained in detail below. The /ON and /OFF options
+  control capturing without having to install/uninstall TCAP several
+  times; when capturing is OFF TCAP remains active in memory but does
+  not capture any text.
+
+  The buffer size is fixed once TCAP is installed. The other options
+  may be used at any time. A different capture file can be specified
+  when running a command (i.e., when using the /C option); specifying
+  a filename at some other time when TCAP is already installed
+  will not generate an error, it will simply be ignored.
+
+  If necessary, TCAP will clear all attributes of the capture file,
+  including the read-only attribute. Setting the file to read-only
+  does not prevent capturing.
+
+  Single-Program Console Capture (/C command-line option)
+  -------------------------------------------------------
+    TCAP can capture text from the console during the execution of
+  a single program. The program to capture text from is specified after
+  the /C command-line option, with any parameters for the program
+  specified afterwards. (Any TCAP options must before the /C option.)
+  The command name must include the extension, and it must also include
+  the path if the program is not in the current directory.
+    TCAP does not have to installed before using this option. If TCAP
+  is not installed beforehand it will not be installed afterwards (i.e.,
+  the installation is temporary). If TCAP is already installed it saves
+  some of its internal state and restores it when the command completes
+  execution. This includes whether capturing was enabled or disabled;
+  the command will be executed with capturing enabled, unless the
+  /OFF switch is used.
+    TCAP switches the active capture file while running the command.
+  For example, if TCAP was installed with a capture file of TCAP1.TXT
+  and TCAP is later run with "TCAP /C PROG.EXE" the console I/O produced
+  by PROG.EXE will be captured to the default file (TCAP.TXT), not
+  TCAP1.TXT. A new capture file may be specified for PROG.EXE; it doesn't
+  have to be the default. When PROG.EXE terminates the original capture file
+  is restored (e.g. TCAP1.TXT). If you want TCAP to continue writing to the
+  original capture file then use the /N command-line option. (Note that if
+  the default name is used in both cases the filename switch has
+  no effect anyway). The /N option takes effect whether a new name is
+  specified or not; i.e., if both the /N option is used and a new filename
+  is specified, the /N option has precedence.
+    Regardless of whether TCAP is installed previously or not, TCAP will
+  terminate with the return value ("errorlevel") of the executed program.
+  (Exception: TCAP may return a nonzero value if buffer overflow occurred,
+  in this case the command's return value is ignored.)
+
+  Note: TCAP is smart enough not to write to an executable file. If you
+    accidentally omit the "/C" TCAP will terminate with an error message.
+    For example,
+          tcap capture.txt prog.exe
+    will generate an error.
+
+  TIP: if the command you wish to run is a batch file, use something
+       like the following:
+
+          tcap /c c:\dos\command.com /c prog.bat
+
+       or, if running MS-Windows:
+
+          tcap /c c:\windows\command.com /c prog.bat
+
+       (The appropriate version of COMMAND.COM is also likely to be in
+       the root directory, so the full path may not be necessary.)
+
+       Batch files can not be run directly, e.g.,
+       Do not use the following:
+          tcap /c prog.bat
+       TCAP will terminate with an error message if you attempt to
+       run a batch file directly.
+
+  TIP: Internal DOS commands can also be run in a similar fashion
+       as batch files, e.g.
+          tcap rootdir.txt /c c:\command.com /c dir c:\
+       will list files in the root directory of drive C and capture
+       the result to a capture file named "ROOTDIR.TXT". Note that
+       the capture file is placed in the current directory, not
+       necessarily the root directory.
+
+  Making Programs TCAP-aware  (programming information)
+  --------------------------
+    Programmers who want to make their programs TCAP-aware can do so
+  using the new TCAP API. TCAP-aware programs can determine if TCAP is
+  currently running, whether it is currently capturing console I/O, and
+  also disable or enable capturing. See API.TXT for more information.
+
+  Known bugs
+  ----------
+    - text input: backspaces and characters that were edited out
+      may appear in the capture file, although this is not likely.
+      This problem only occurs if a program does character-by-character
+      input (using DOS services). This was more of a problem with previous
+      versions, not version 3.0 (version 3.0 captures input on a line-by-line
+      basis whenever possible).
+    - TCAP 2.0 is reported to have a problem when a Novell network is
+      running. The cause of this problem, and whether it still exists
+      with the current version, is not known. (I do have a guess at the
+      cause of the problem. If my guess is correct then the problem has
+      already been fixed - this bug probably doesn't exist anymore.)
+
+  Changes since version 2.0
+  -------------------------
+    - default file name is now TCAP.TXT (used to be OUTPUT.TXT)
+    - added ability to execute another program directly and capture
+      text while it is running (/C command-line option)
+    - added /ON and /OFF switches to control when capturing is performed
+    - bug fix: TCAP can now handle backspaces and other cursor movement
+      when text is being input (the captured text looks like the
+      final input, not everything that appeared while editing)
+    - bug fix: TCAP is much less likely to hang the computer during
+      a buffer flush.
+    - minimum buffer size has been changed from 2K to 4K. (This is to
+      prevent TCAP from corrupting its own code and data.)
+    - added API for TCAP-aware programs (see API.TXT)
+    - minor changes / bug fixes
+
+  Changes since version 1.0 (version 1.0 was never released)
+  -------------------------
+    - capture method has changed (now works in Win95 DOS-box)
+    - size of internal buffer can now be specified on the command-line
+    - more than one command-line parameter is parsed (if more than one is
+      present), version 1.0 ignored any parameters after the first one
+    - several changes were made to make the program more stable
+
+  Contact Information
+  -------------------
+  Please send bug reports, comments, or suggestions to the email address
+  listed below. Feedback is greatly appreciated.
+  If submitting a bug report please include any pertinent information,
+  including the name of the operating system, the operating system version,
+  and the names of any other memory-resident utilities.
+
+    Program author:
+       Tim Kannel
+           Computer Science student, University of Minnesota - Twin Cities
+       email: kann0018@tc.umn.edu
+
+       The above email address will be valid at least until June 1999.
+       After that I may not even have Internet access for a while.
+
+  Getting the Latest Version of TCAP
+  ----------------------------------
+    The primary site for TCAP is Simtel:
+       ftp://ftp.simtel.net/pub/simtelnet/msdos/sysutl/tcapxx.zip
+    ('xx' is the version number, e.g. '30' for version 3.0)
+
+    The newest version of TCAP will always be on Simtel.
+    However, TCAP is available from at least one other site:
+       ftp://garbo.uwasa.fi/pc/screen/tcap20.zip
+       (Don't be confused by the Garbo URL - TCAP is not a screen capture
+       utility, it captures text as it is generated. If TCAP is no longer in
+       that directory then check the "sysutil" directory, or get it
+       from Simtel.)
+
+  Other Programs/Libraries From The Author
+  ----------------------------------------
+    - FTPDIF - finds differences in FTP directory listings. A new index file
+      is written that includes information on what changed. Includes other
+      features such as user-comments and a log file (the log lists only the
+      changes, not the entire index). This program is available on Simtel
+      as FTPDIFxx.ZIP in the msdos/00_info directory, where 'xx' is
+      the version number. The URL for version 2.1 is
+
+      ftp://ftp.simtel.net/pub/simtelnet/msdos/00_info/ftpdif21.zip
+
+    - Dewey is a C++ library for a text-mode user interface. It includes
+      windows, menus, and an event-driven architecture. Standard components
+      include checkboxes, radio buttons, push-buttons, text windows, etc.
+      Dewey is an improved version of Al Steven's DFlat++ library. The
+      source code is in the public domain.
+
+      Dewey is not directly available yet. I may eventually put it on
+      Simtel (in the "C"/C++ directory); until then it can be obtained
+      through email.
+
+End of READ.ME

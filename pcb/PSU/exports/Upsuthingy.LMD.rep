@@ -1,0 +1,81 @@
+Create Export File: C:\Documents and Settings\electrotech\Desktop\exports\Upsuthingy.LMD
+---------------------------------------------------------------------------------------------------
+Layer = DrillUnplated, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+1	39	0	    0		454		 "Universal Cutter 0.2 mm marking"
+---------------------------------------------------------------------------------------------------
+Layer = DrillUnplated, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+7	2	0	    0		146		 "Spiral Drill 0.8 mm"
+8	17	0	    0		254		 "Spiral Drill 0.9 mm"
+9	2	0	    0		288		 "Spiral Drill 1.0 mm"
+11	14	0	    0		207		 "Spiral Drill 1.2 mm"
+19	4	0	    0		69		 "Spiral Drill 2.0 mm"
+---------------------------------------------------------------------------------------------------
+Layer = InsulateBottom, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+9	0	43	    3206		715		 "End Mill 0.8 mm (31 mil)"
+---------------------------------------------------------------------------------------------------
+Layer = BoardOutline, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+---------------------------------------------------------------------------------------------------
+Layer = TextBottom, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+---------------------------------------------------------------------------------------------------
+Layer = CuttingOutside, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+3	0	4	    640		484		 "Contour Router 2.0 mm (79 mil)"
+---------------------------------------------------------------------------------------------------
+Layer = CuttingInside, Phase = MillingBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+---------------------------------------------------------------------------------------------------
+Layer = SolderMaskBottom, Phase = CuttingSoldStopBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture
+---------------------------------------------------------------------------------------------------
+Layer = SolderPasteBottom, Phase = DispenseSolderPasteBottom
+Directly realized objects: Closed Shapes, Rectangles, Circles (no usage of any tool)
+No. of objects 0
+	Perimeter [mm]	= 0
+	Moves [mm]	= 0
+Tool usage :
+No.	Flashes	Paths	Length [mm]	Moves [mm]	Tool/Aperture

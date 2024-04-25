@@ -1,0 +1,371 @@
+Microsoft (R) Macro Assembler Version 6.11d		    02/08/10 13:14:32
+template.asm						     Page 1 - 1
+
+
+				.model tiny
+ 0000				.code
+
+				; Eth0 preprocessor
+ = 0A00				ETH0    equ     0A00h   ;PPI2 + Eth_Controller
+ = 0A00				PORTA   equ     ETH0+0
+ = 0A01				PORTB   equ     ETH0+1
+ = 0A02				PORTC   equ     ETH0+2
+ = 0A03				PPICTL  equ     ETH0+3
+ = 0001				SET		equ		00000001b
+ = 0000				RESET	equ		00000000b
+ = 00xx0000b			BANK0	equ		00xx0000b	; eth0 Memory bank 0
+ = 00xx0001b			BANK1	equ		00xx0001b
+ = 00xx0010b			BANK2	equ		00xx0010b
+ = 00xx0011b			BANK3	equ		00xx0011b	; to 3
+ = 0000				RDCR	equ		00000000b	; Read control register (Req, Arg.)
+ = 003A				RDBM	equ		00111010b	; Read buffer register
+ = 0040				WCR		equ		01000000b	; write control register (Req, Arg + Data Byte)
+ = 007A				WBR		equ		01111010b	; write buffer register (Req, Data Byte)
+ = 0080				BFS		equ		10000000b	; Bit field set (Req, Arg + Data Byte)
+ = 00A0				BFC		equ		10100000b	; Bit field clear (Req, Arg + Data Byte)
+ = 00FF				SRC		equ		11111111b	; Soft Reset
+
+				; To program any register, first the bank must be selected via 
+
+				        org     0800h
+ 0800				main    proc
+ 0800				init:
+ 0800  B0 90			        mov     al,10010000b    ;configuration word for the 8255
+				                                ;both group A and B = mode 0
+				                                ;port A = input
+				                                ;port B = output
+				                                ;port C = output
+ 0802  BA 0A03			        mov     dx,PPICTL
+ 0805  EE			        out     dx,al         ;send the configuration word 
+ 0806				init_RX_Buffer:
+				; init_RX_Buffer requires to init: ERXSDT and ERXND first to determine the size of the Rx/Tx buffer.
+ 0806  B0 10					mov		al,00010000b ; selects ECON1 and sets Bank 0 as active
+ 0808  0C 40					or		al,WCR		 ; adds the opcode
+ 080A  E8 0145					call	outbyte
+				; programming the start of Rx
+ 080D  B0 08					mov		al,08h		; ERXSTL
+ 080F  0C 40					or		al,WCR
+ 0811  B4 00					mov		ah,00h
+ 0813  E8 0172					call	outword
+ 0816  B0 09					mov		al,09h		; ERXSTH
+ 0818  0C 40					or		al,WCR
+ 081A  B4 00					mov		ah,00h
+ 081C  E8 0169					call	outword
+				; programming the end of Rx
+ 081F  B0 0A					mov		al,0Ah		; ERXNDL
+ 0821  0C 40					or		al,WCR
+ 0823  B4 FF					mov		ah,0ffh
+ 0825  E8 0160					call	outword
+ 0828  B0 0B					mov		al,0Bh		; ERXNDH
+ 082A  0C 40					or		al,WCR
+ 082C  B4 0F					mov		ah,0Fh
+ 082E  E8 0157					call	outword
+				; Now to program ERXRDPT
+ 0831  B0 0C					mov		al,0Ch		;ERXRDPTL 
+ 0833  0C 40					or		al,WCR
+ 0835  B4 00					mov		ah,00h
+ 0837  E8 014E					call	outword
+ 083A  B0 0D					mov		al,0Dh
+ 083C  0C 40					or		al,WCR
+ 083E  B4 00					mov		ah,00h
+ 0840  E8 0145					call	outword
+				; [Completed] INIT_RX_BUFFER
+ 0843				init_MAC:
+				; to init_MAC, first init MARXEN in MAXCON1
+ 0843  B0 12					mov		al,00010010b ; selects ECON1 and sets Bank 2 as active
+ 0845  0C 40					or		al,WCR
+ 0847  E8 0108					call	outbyte
+ 084A  B0 00					mov		al,00h		; MACON1 (Stands for MAc CONtrol 1)
+ 084C  0C 40					or		al,WCR
+ 084E  B4 0D					mov		ah,0Dh
+ 0850  E8 0135					call	outword
+ 0853  B0 02					mov		al,02h		; MACON3
+ 0855  0C 40					or		al,WCR
+ 0857  B4 F5					mov		ah,0F5h
+ 0859  E8 012C					call	outword
+ 085C  B0 03					mov		al,03h		; MACON3
+ 085E  0C 40					or		al,WCR
+ 0860  B4 40					mov		ah,40h
+ 0862  E8 0123					call	outword
+ 0865  B0 04					mov		al,04h		; MABBIPG
+ 0867  0C 40					or		al,WCR
+ 0869  B4 15					mov		ah,15h
+ 086B  E8 011A					call	outword
+ 086E  B0 06					mov		al,06h		; MAIPGL
+ 0870  0C 40					or		al,WCR
+ 0872  B4 12					mov		ah,12h
+ 0874  E8 0111					call	outword
+				; Now to prgoram the MAC Address with the following: 43:6F:66:66:65:65
+ 0877  B0 13					mov		al,00010011b ; selects ECON1 and sets Bank 3 as active
+ 0879  0C 40					or		al,WCR
+ 087B  E8 00D4					call	outbyte
+ 087E  B0 04					mov		al,04h		; MAADR1 (MAc ADdRess 1)
+ 0880  0C 40					or		al,WCR
+ 0882  B4 43					mov		ah,43h
+ 0884  E8 0101					call	outword
+ 0887  B0 05					mov		al,05h		; MAADR2
+ 0889  0C 40					or		al,WCR
+ 088B  B4 6F					mov		ah,6Fh
+ 088D  E8 00F8					call	outword
+ 0890  B0 02					mov		al,02h		; MAADR3
+ 0892  0C 40					or		al,WCR
+ 0894  B4 66					mov		ah,66h
+ 0896  E8 00EF					call	outword
+ 0899  B0 03					mov		al,03h		; MAADR4
+ 089B  0C 40					or		al,WCR
+ 089D  B4 66					mov		ah,66h
+ 089F  E8 00E6					call	outword
+ 08A2  B0 00					mov		al,00h		; MAADR5
+ 08A4  0C 40					or		al,WCR
+ 08A6  B4 65					mov		ah,65h
+ 08A8  E8 00DD					call	outword
+ 08AB  B0 01					mov		al,01h		; MAADR6
+ 08AD  0C 40					or		al,WCR
+ 08AF  B4 65					mov		ah,65h
+ 08B1  E8 00D4					call	outword
+				; [COMPLETED] init_MAC
+ 08B4				init_PHY:				
+				; Okay... here it gets complicated. I need to program the PHCON1 register... which is not part of the common registers
+				; to access the PHY registers, one must pass by the MII register in Bank 2. To program the PHY register, one must also 
+				; Read from it first then Write to it... i wonder sometimes about these engineers...
+ 08B4  B0 12					mov		al,00010010b ; selects ECON1 and sets Bank 2 as active
+ 08B6  0C 40					or		al,WCR
+ 08B8  E8 0097					call	outbyte
+ 08BB  B0 14					mov		al,14h		 ; MIREGADR
+ 08BD  0C 40					or		al,WCR
+ 08BF  B4 00					mov		ah,00h
+ 08C1  E8 00C4					call	outword
+ 08C4  B0 12					mov		al,12h		; MICMD
+ 08C6  0C 40					or		al,WCR
+ 08C8  B4 01					mov		ah,01h		; enables read
+ 08CA  E8 00BB					call	outword
+						
+ 08CD				main    endp
+
+ 08CD				inword proc
+				; AX.b3 Must have the first bit to send
+ 08CD  5B				pop		bx			; need this for bogus
+ 08CE  BB 0000				mov		bx,0
+ 08D1  B1 00				mov		cl,0		; the bit counter
+ 08D3  8D 3E 094A R			lea		di,temp
+ 08D7				outbogus:
+ 08D7  50				push	ax			; this is all bogus
+ 08D8  BA 0A03				mov		dx,PPICTL	; it is used to keep
+ 08DB  B0 00				mov		al,RESET	; a 50% duty cycle
+ 08DD  EE				out 	dx,al		; on the SET/RESET
+ 08DE  58				pop		ax
+ 08DF  BA 0A01				mov		dx,PORTB
+ 08E2  EE				out		dx,al
+ 08E3  D1 C3				rol		bx,1
+ 08E5  80 FB 2D				cmp		bl,45
+ 08E8  74 04				je		outbit
+ 08EA  FE C3				inc		bl
+ 08EC  EB 00				jmp		outbit
+ 08EE				outbit:
+ 08EE  50				push	ax
+ 08EF  BA 0A03				mov		dx,PPICTL
+ 08F2  B0 01				mov		al,SET
+ 08F4  EE				out		dx,al		; bit is set
+ 08F5  58				pop		ax
+ 08F6  BA 0A01				mov		dx,PORTB
+ 08F9  EE				out		dx,al		; Out MSB (present)
+ 08FA  D1 C0				rol		ax,1		; next bit to out
+ 08FC  80 F9 07				cmp		cl,7
+ 08FF  74 04				je		inbogus
+ 0901  FE C1				inc		cl
+ 0903  EB D2				jmp		outbogus		; Not quite, but good for now
+ 0905				inbogus:
+ 0905  50				push	ax
+ 0906  BA 0A03				mov		dx,PPICTL
+ 0909  B0 00				mov		al,RESET
+ 090B  EE				out		dx,al
+ 090C  58				pop		ax
+ 090D  BA 0A00				mov		dx,PORTA
+ 0910  EC				in		al,dx
+					mov		di,al
+template.asm(181) : error A2070: invalid instruction operands
+ 0911  42				inc		dx
+ 0912  80 F9 2D				cmp		cl,45
+ 0915  74 03				je		inbit
+ 0917  42				inc		dx
+ 0918  EB 00				jmp		inbit
+ 091A				inbit:
+ 091A  50				push	ax
+ 091B  BA 0A03				mov		dx,PPICTL
+ 091E  B0 01				mov		al,SET
+ 0920  EE				out		dx,al
+ 0921  58				pop		ax
+ 0922  BA 0A00				mov		dx,PORTA
+ 0925  EC				in		al,dx
+ 0926  88 05				mov		[di],al
+ 0928  47				inc		di
+ 0929  80 F9 0F				cmp		cl,15
+ 092C  74 04				je		shi
+ 092E  FE C1				inc		cl
+ 0930  EB D3				jmp		inbogus
+ 0932				shi:
+ 0932  B1 01				mov		cl,1
+ 0934  8A 16 094A R			mov		dl,temp
+ 0938  A0 094B R			mov		al,temp+1
+ 093B  D2 C8				ror		al,cl
+ 093D  02 D0				add		dl,al
+ 093F  FE C1				inc		cl
+ 0941  A0 094C R			mov		al,temp+2
+ 0944  D2 C8				ror		al,cl
+ 0946  02 D0				add		dl,al
+					
+ 0948  5B				pop		bx
+ 0949  C3				ret
+					
+ 094A 00 00 00 00 00 00		temp db 0,0,0,0,0,0,0,0
+       00 00
+ 0952				inword endp
+
+ 0952				outbyte proc
+				; AX.b3 Must have the first bit to send
+ 0952  5B				pop		bx			; need this for bogus
+ 0953  BB 0000				mov		bx,0
+ 0956  B1 00				mov		cl,0		; the bit counter
+ 0958				bogus:
+ 0958  50				push	ax			; this is all bogus
+ 0959  BA 0A03				mov		dx,PPICTL	; it is used to keep
+ 095C  B0 00				mov		al,RESET	; a 50% duty cycle
+ 095E  EE				out 	dx,al		; on the SET/RESET
+ 095F  58				pop		ax
+ 0960  BA 0A01				mov		dx,PORTB
+ 0963  EE				out		dx,al
+ 0964  D1 C3				rol		bx,1
+ 0966  80 FB 2D				cmp		bl,45
+ 0969  74 04				je		outbit
+ 096B  FE C3				inc		bl
+ 096D  EB 00				jmp		outbit
+ 096F				outbit:
+ 096F  50				push	ax
+ 0970  BA 0A03				mov		dx,PPICTL
+ 0973  B0 01				mov		al,SET
+ 0975  EE				out		dx,al		; bit is set
+ 0976  58				pop		ax
+ 0977  BA 0A01				mov		dx,PORTB
+ 097A  EE				out		dx,al		; Out MSB (present)
+ 097B  D1 C0				rol		ax,1		; next bit to out
+ 097D  80 F9 07				cmp		cl,7
+ 0980  74 04				je		shi
+ 0982  FE C1				inc		cl
+ 0984  EB D2				jmp		bogus		; Not quite, but good for now
+ 0986				shi:
+ 0986  5B				pop		bx
+ 0987  C3				ret
+ 0988				outbyte endp
+
+ 0988				outword proc
+				; AX.b3 Must have the first bit to send and ah must have the data to send
+ 0988  5B				pop		bx			; need this for bogus
+ 0989  BB 0000				mov		bx,0
+ 098C  B1 00				mov		cl,0		; the bit counter
+ 098E				bogus:
+ 098E  50				push	ax			; this is all bogus
+ 098F  BA 0A03				mov		dx,PPICTL	; it is used to keep
+ 0992  B0 00				mov		al,RESET	; a 50% duty cycle
+ 0994  EE				out 	dx,al		; on the SET/RESET
+ 0995  58				pop		ax
+ 0996  BA 0A01				mov		dx,PORTB
+ 0999  EE				out		dx,al
+ 099A  D1 C3				rol		bx,1
+ 099C  80 FB 2D				cmp		bl,45
+ 099F  74 04				je		outbit
+ 09A1  FE C3				inc		bl
+ 09A3  EB 00				jmp		outbit
+ 09A5				outbit:
+ 09A5  50				push	ax
+ 09A6  BA 0A03				mov		dx,PPICTL
+ 09A9  B0 01				mov		al,SET
+ 09AB  EE				out		dx,al		; bit is set
+ 09AC  58				pop		ax
+ 09AD  BA 0A01				mov		dx,PORTB
+ 09B0  EE				out		dx,al		; Out MSB (present)
+ 09B1  D1 C0				rol		ax,1		; next bit to out
+ 09B3  80 F9 0F				cmp		cl,15
+ 09B6  74 04				je		shi
+ 09B8  FE C1				inc		cl
+ 09BA  EB D2				jmp		bogus		; Not quite, but good for now
+ 09BC				shi:
+ 09BC  5B				pop		bx
+ 09BD  C3				ret
+ 09BE				outword endp
+						end
+						
+Microsoft (R) Macro Assembler Version 6.11d		    02/08/10 13:14:32
+template.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_TEXT  . . . . . . . . . . . . .	16 Bit	 09BE	  Word	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'DATA'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+inword . . . . . . . . . . . . .	P Near	 08CD	  _TEXT	Length= 0085 Public
+  outbogus . . . . . . . . . . .	L Near	 08D7	  _TEXT	
+  outbit . . . . . . . . . . . .	L Near	 08EE	  _TEXT	
+  inbogus  . . . . . . . . . . .	L Near	 0905	  _TEXT	
+  inbit  . . . . . . . . . . . .	L Near	 091A	  _TEXT	
+  shi  . . . . . . . . . . . . .	L Near	 0932	  _TEXT	
+main . . . . . . . . . . . . . .	P Near	 0800	  _TEXT	Length= 00CD Public
+  init . . . . . . . . . . . . .	L Near	 0800	  _TEXT	
+  init_RX_Buffer . . . . . . . .	L Near	 0806	  _TEXT	
+  init_MAC . . . . . . . . . . .	L Near	 0843	  _TEXT	
+  init_PHY . . . . . . . . . . .	L Near	 08B4	  _TEXT	
+outbyte  . . . . . . . . . . . .	P Near	 0952	  _TEXT	Length= 0036 Public
+  bogus  . . . . . . . . . . . .	L Near	 0958	  _TEXT	
+  outbit . . . . . . . . . . . .	L Near	 096F	  _TEXT	
+  shi  . . . . . . . . . . . . .	L Near	 0986	  _TEXT	
+outword  . . . . . . . . . . . .	P Near	 0988	  _TEXT	Length= 0036 Public
+  bogus  . . . . . . . . . . . .	L Near	 098E	  _TEXT	
+  outbit . . . . . . . . . . . .	L Near	 09A5	  _TEXT	
+  shi  . . . . . . . . . . . . .	L Near	 09BC	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0001h	 
+@code  . . . . . . . . . . . . .	Text   	 DGROUP
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+BANK0  . . . . . . . . . . . . .	Text   	 00xx0000b
+BANK1  . . . . . . . . . . . . .	Text   	 00xx0001b
+BANK2  . . . . . . . . . . . . .	Text   	 00xx0010b
+BANK3  . . . . . . . . . . . . .	Text   	 00xx0011b
+BFC  . . . . . . . . . . . . . .	Number	 00A0h	 
+BFS  . . . . . . . . . . . . . .	Number	 0080h	 
+ETH0 . . . . . . . . . . . . . .	Number	 0A00h	 
+PORTA  . . . . . . . . . . . . .	Number	 0A00h	 
+PORTB  . . . . . . . . . . . . .	Number	 0A01h	 
+PORTC  . . . . . . . . . . . . .	Number	 0A02h	 
+PPICTL . . . . . . . . . . . . .	Number	 0A03h	 
+RDBM . . . . . . . . . . . . . .	Number	 003Ah	 
+RDCR . . . . . . . . . . . . . .	Number	 0000h	 
+RESET  . . . . . . . . . . . . .	Number	 0000h	 
+SET  . . . . . . . . . . . . . .	Number	 0001h	 
+SRC  . . . . . . . . . . . . . .	Number	 00FFh	 
+WBR  . . . . . . . . . . . . . .	Number	 007Ah	 
+WCR  . . . . . . . . . . . . . .	Number	 0040h	 
+temp . . . . . . . . . . . . . .	Byte	 094A	  _TEXT	
+
+	   0 Warnings
+	   1 Errors

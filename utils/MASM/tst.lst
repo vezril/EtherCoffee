@@ -1,0 +1,259 @@
+Microsoft (R) Macro Assembler Version 6.11d		    02/12/10 11:20:45
+tst.asm							     Page 1 - 1
+
+
+				.model tiny
+ 0000				.code
+
+				EXTRN newline:NEAR, outbyte:NEAR, outword:NEAR, getc:NEAR
+
+ = 0F00				LED		equ		0f00h
+ = 0A00				PPI     equ     0A00h   ;PPI2 + Eth0
+ = 0A00				PORTA   equ     PPI+0
+ = 0A01				PORTB   equ     PPI+1
+ = 0A02				PORTC   equ     PPI+2
+ = 0A03				PPICTL  equ     PPI+3
+ = 0001				SET		equ		00000001b
+ = 0000				RESET	equ		00000000b
+ = 0040				WCR		equ		01000000b
+ = 0000				RDCR	equ		00000000b
+				        org     0800h
+ 0800				main    proc
+ 0800				init:
+ 0800  B0 90			        mov     al,10010000b    ;configuration word for the 8255
+				                                ;both group A and B = mode 0
+				                                ;port A = input
+				                                ;port B = output
+				                                ;port C = output
+ 0802  BA 0A03			        mov     dx,PPICTL
+ 0805  EE			        out     dx,al         ;send the configuration word 
+
+ 0806				tst:
+ 0806  BA 0F00					mov		dx,LED
+ 0809  B0 05					mov		al,5h
+ 080B  EE					out		dx,al
+ 080C  B0 1F					mov		al,1fh
+ 080E  0C 40					or		al,WCR
+ 0810  B4 17					mov		ah,00010111b
+ 0812  E8 00D0					call	outdata
+ 0815  B0 15					mov		al,15h
+ 0817  0C 40					or		al,WCR
+ 0819  B4 05					mov		ah,00000101b
+ 081B  E8 00C7					call	outdata
+ 081E				here:
+ 081E  B0 1F					mov		al,1fh
+ 0820  0C 40					or		al,WCR
+ 0822  E8 0003					call	inreg
+ 0825  EB F7					jmp		here
+
+ 0827 FF			save	db	0ffh		
+ 0828				main    endp
+
+ 0828				inreg proc
+				; Al.b7 Must have the first bit to send
+ 0828  53				push	bx			; need this for bogus
+ 0829  BB 0000				mov		bx,0
+ 082C  B1 00				mov		cl,0		; the bit counter
+ 082E  8D 3E 08DD R			lea		di,temp
+ 0832				outbogus:
+ 0832  50				push	ax			; this is all bogus
+ 0833  BA 0A03				mov		dx,PPICTL	; it is used to keep
+ 0836  B0 00				mov		al,RESET	; a 50% duty cycle
+ 0838  EE				out 	dx,al		; on the SET/RESET
+ 0839  58				pop		ax
+ 083A  BA 0A01				mov		dx,PORTB
+ 083D  EE				out		dx,al
+ 083E  D1 C3				rol		bx,1
+ 0840  80 FB 2D				cmp		bl,45
+ 0843  74 04				je		outbit
+ 0845  FE C3				inc		bl
+ 0847  EB 00				jmp		outbit
+ 0849				outbit:
+ 0849  50				push	ax
+ 084A  BA 0A03				mov		dx,PPICTL
+ 084D  B0 01				mov		al,SET
+ 084F  EE				out		dx,al		; bit is set
+ 0850  58				pop		ax
+ 0851  BA 0A01				mov		dx,PORTB
+ 0854  EE				out		dx,al		; Out MSB (present)
+ 0855  D1 C0				rol		ax,1		; next bit to out
+ 0857  80 F9 07				cmp		cl,7
+ 085A  74 04				je		inbogus
+ 085C  FE C1				inc		cl
+ 085E  EB D2				jmp		outbogus		; Not quite, but good for now
+ 0860				inbogus:
+ 0860  50				push	ax
+ 0861  BA 0A03				mov		dx,PPICTL
+ 0864  B0 00				mov		al,RESET
+ 0866  EE				out		dx,al
+ 0867  58				pop		ax
+ 0868  BA 0A00				mov		dx,PORTA
+ 086B  EC				in		al,dx
+ 086C  24 80				and		al,10000000b
+ 086E  88 05				mov		[di],al
+ 0870  42				inc		dx
+ 0871  80 F9 2D				cmp		cl,45
+ 0874  74 03				je		inbit
+ 0876  42				inc		dx
+ 0877  EB 00				jmp		inbit
+ 0879				inbit:
+ 0879  50				push	ax
+ 087A  BA 0A03				mov		dx,PPICTL
+ 087D  B0 01				mov		al,SET
+ 087F  EE				out		dx,al
+ 0880  58				pop		ax
+ 0881  BA 0A00				mov		dx,PORTA
+ 0884  EC				in		al,dx
+ 0885  24 80				and		al,10000000b
+ 0887  88 05				mov		[di],al
+ 0889  47				inc		di
+ 088A  80 F9 0F				cmp		cl,15
+ 088D  74 04				je		shi
+ 088F  FE C1				inc		cl
+ 0891  EB CD				jmp		inbogus
+ 0893				shi:
+ 0893  B1 01				mov		cl,1
+ 0895  8A 16 08DD R			mov		dl,temp
+ 0899  A0 08DE R			mov		al,temp+1
+ 089C  D2 C8				ror		al,cl
+ 089E  02 D0				add		dl,al
+ 08A0  FE C1				inc		cl
+ 08A2  A0 08DF R			mov		al,temp+2
+ 08A5  D2 C8				ror		al,cl
+ 08A7  02 D0				add		dl,al
+ 08A9  FE C1				inc		cl
+ 08AB  A0 08E0 R			mov		al,temp+3
+ 08AE  D2 C8				ror		al,cl
+ 08B0  02 D0				add		dl,al
+ 08B2  FE C1				inc		cl
+ 08B4  A0 08E1 R			mov		al,temp+4
+ 08B7  D2 C8				ror		al,cl
+ 08B9  02 D0				add		dl,al
+ 08BB  FE C1				inc		cl
+ 08BD  A0 08E2 R			mov		al,temp+5
+ 08C0  D2 C8				ror		al,cl
+ 08C2  02 D0				add		dl,al
+ 08C4  FE C1				inc		cl
+ 08C6  A0 08E3 R			mov		al,temp+6
+ 08C9  D2 C8				ror		al,cl
+ 08CB  02 D0				add		dl,al
+ 08CD  FE C1				inc		cl
+ 08CF  A0 08E4 R			mov		al,temp+7
+ 08D2  D2 C8				ror		al,cl
+ 08D4  02 D0				add		dl,al
+ 08D6  8A C2				mov		al,dl
+ 08D8  83 E0 0F				and		ax,0fh
+ 08DB  5B				pop		bx
+ 08DC  C3				ret
+					
+ 08DD 00 00 00 00 00 00		temp db 0,0,0,0,0,0,0,0
+       00 00
+ 08E5				inreg endp
+ 08E5				outdata proc
+				; AX.b3 Must have the first bit to send and ah must have the data to send
+ 08E5  53				push	bx			; need this for bogus
+ 08E6  BB 0000				mov		bx,0
+ 08E9  B1 00				mov		cl,0		; the bit counter
+ 08EB				bogus:
+ 08EB  50				push	ax			; this is all bogus
+ 08EC  BA 0A03				mov		dx,PPICTL	; it is used to keep
+ 08EF  B0 00				mov		al,RESET	; a 50% duty cycle
+ 08F1  EE				out 	dx,al		; on the SET/RESET
+ 08F2  58				pop		ax
+ 08F3  BA 0A01				mov		dx,PORTB
+ 08F6  EE				out		dx,al
+ 08F7  D1 C3				rol		bx,1
+ 08F9  80 FB 2D				cmp		bl,45
+ 08FC  74 04				je		outbit
+ 08FE  FE C3				inc		bl
+ 0900  EB 00				jmp		outbit
+ 0902				outbit:
+ 0902  50				push	ax
+ 0903  BA 0A03				mov		dx,PPICTL
+ 0906  B0 01				mov		al,SET
+ 0908  EE				out		dx,al		; bit is set
+ 0909  58				pop		ax
+ 090A  BA 0A01				mov		dx,PORTB
+ 090D  EE				out		dx,al		; Out MSB (present)
+ 090E  D1 C0				rol		ax,1		; next bit to out
+ 0910  80 F9 0F				cmp		cl,15
+ 0913  74 04				je		shi
+ 0915  FE C1				inc		cl
+ 0917  EB D2				jmp		bogus		; Not quite, but good for now
+ 0919				shi:
+ 0919  50				push	ax
+ 091A  B0 00				mov		al,RESET
+ 091C  BA 0A03				mov		dx,PPICTL
+ 091F  EE				out		dx,al
+ 0920  58				pop		ax
+ 0921  5B				pop		bx
+ 0922  C3				ret
+ 0923				outdata endp
+				      end
+Microsoft (R) Macro Assembler Version 6.11d		    02/12/10 11:20:45
+tst.asm							     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+DGROUP . . . . . . . . . . . . .	GROUP
+_TEXT  . . . . . . . . . . . . .	16 Bit	 0923	  Word	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	16 Bit	 0000	  Word	  Public  'DATA'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+inreg  . . . . . . . . . . . . .	P Near	 0828	  _TEXT	Length= 00BD Public
+  outbogus . . . . . . . . . . .	L Near	 0832	  _TEXT	
+  outbit . . . . . . . . . . . .	L Near	 0849	  _TEXT	
+  inbogus  . . . . . . . . . . .	L Near	 0860	  _TEXT	
+  inbit  . . . . . . . . . . . .	L Near	 0879	  _TEXT	
+  shi  . . . . . . . . . . . . .	L Near	 0893	  _TEXT	
+main . . . . . . . . . . . . . .	P Near	 0800	  _TEXT	Length= 0028 Public
+  init . . . . . . . . . . . . .	L Near	 0800	  _TEXT	
+  tst  . . . . . . . . . . . . .	L Near	 0806	  _TEXT	
+  here . . . . . . . . . . . . .	L Near	 081E	  _TEXT	
+outdata  . . . . . . . . . . . .	P Near	 08E5	  _TEXT	Length= 003E Public
+  bogus  . . . . . . . . . . . .	L Near	 08EB	  _TEXT	
+  outbit . . . . . . . . . . . .	L Near	 0902	  _TEXT	
+  shi  . . . . . . . . . . . . .	L Near	 0919	  _TEXT	
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 0000h	 
+@DataSize  . . . . . . . . . . .	Number	 0000h	 
+@Interface . . . . . . . . . . .	Number	 0000h	 
+@Model . . . . . . . . . . . . .	Number	 0001h	 
+@code  . . . . . . . . . . . . .	Text   	 DGROUP
+@data  . . . . . . . . . . . . .	Text   	 DGROUP
+@fardata?  . . . . . . . . . . .	Text   	 FAR_BSS
+@fardata . . . . . . . . . . . .	Text   	 FAR_DATA
+@stack . . . . . . . . . . . . .	Text   	 DGROUP
+LED  . . . . . . . . . . . . . .	Number	 0F00h	 
+PORTA  . . . . . . . . . . . . .	Number	 0A00h	 
+PORTB  . . . . . . . . . . . . .	Number	 0A01h	 
+PORTC  . . . . . . . . . . . . .	Number	 0A02h	 
+PPICTL . . . . . . . . . . . . .	Number	 0A03h	 
+PPI  . . . . . . . . . . . . . .	Number	 0A00h	 
+RDCR . . . . . . . . . . . . . .	Number	 0000h	 
+RESET  . . . . . . . . . . . . .	Number	 0000h	 
+SET  . . . . . . . . . . . . . .	Number	 0001h	 
+WCR  . . . . . . . . . . . . . .	Number	 0040h	 
+getc . . . . . . . . . . . . . .	L Near	 0000	  _TEXT	External
+newline  . . . . . . . . . . . .	L Near	 0000	  _TEXT	External
+outbyte  . . . . . . . . . . . .	L Near	 0000	  _TEXT	External
+outword  . . . . . . . . . . . .	L Near	 0000	  _TEXT	External
+save . . . . . . . . . . . . . .	Byte	 0827	  _TEXT	
+temp . . . . . . . . . . . . . .	Byte	 08DD	  _TEXT	
+
+	   0 Warnings
+	   0 Errors

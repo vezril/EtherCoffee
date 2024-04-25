@@ -1,0 +1,52 @@
+# Gambas Form File 2.0
+
+{ Form Form
+  MoveScaled(0,0,50,38)
+  Text = ("EtherCoffee")
+  { Label1 Label
+    MoveScaled(33,3,22,3)
+    Text = ("EtherCoffee GUI suite.")
+  }
+  { Label2 Label
+    MoveScaled(41,6,22,3)
+    Text = ("Version 1.0")
+  }
+  { Label3 Label
+    MoveScaled(22,0,31,3)
+    Text = ("Written by Calvin O. Ference (anarkyst)")
+  }
+  { Label4 Label
+    MoveScaled(5,13,6,3)
+    Text = ("Status:")
+  }
+  { BrewButton ToggleButton
+    MoveScaled(31,11,11,6)
+    Text = ("Brew")
+  }
+  { StatusButton ToggleButton
+    MoveScaled(31,23,11,6)
+    Text = ("Status")
+  }
+  { StatusLabel TextLabel
+    MoveScaled(5,16,19,5)
+    Text = ("")
+    Border = Border.Etched
+  }
+  { WaterLabel TextLabel
+    MoveScaled(5,27,19,5)
+    Text = ("")
+    Border = Border.Etched
+  }
+  { Label5 Label
+    MoveScaled(5,25,10,2)
+    Text = ("Water Level")
+  }
+  { Label6 Label
+    MoveScaled(5,7,11,3)
+    Text = ("EtherCoffee is:")
+  }
+  { onofflabel Label
+    MoveScaled(16,7,11,3)
+    Text = ("")
+  }
+}

@@ -1,0 +1,101 @@
+' Gambas class file
+PUBLIC online AS Boolean
+PUBLIC water AS Integer
+
+PUBLIC SUB Form_Open()
+  DIM hFile AS File
+  DIM sLine AS String
+  
+  SHELL "eccheck > /tmp/eccheck"
+  WAIT 5
+  hFile = OPEN "/tmp/eccheck" FOR READ 
+  WHILE NOT Eof(hFile)
+    LINE INPUT #hFile, sLine
+    IF sLine = "Online" THEN 
+      onofflabel.Text = "Online"
+      onofflabel.ForeColor = 65280 
+      WaterLabel.Text = ""
+      waterLabel.ForeColor = &H0
+      StatusLabel.Text = ""
+      StatusLabel.ForeColor = &H0
+      BrewButton.Enabled = TRUE
+    ELSE IF sLine = "Offline" THEN 
+      onofflabel.Text = "Offline"
+      onofflabel.ForeColor = &HFF0000
+      WaterLabel.Text = "Offline"
+      waterLabel.ForeColor = &HFF0000
+      StatusLabel.Text = "Offline"
+      StatusLabel.ForeColor = &HFF0000
+      BrewButton.Enabled = FALSE
+    ENDIF
+  WEND
+  CLOSE #hFile
+  SHELL "rm /tmp/eccheck"
+END
+
+PUBLIC SUB StatusButton_Click()
+  DIM hFile AS File
+  DIM sLine AS String
+  
+  SHELL "eccheck > /tmp/eccheck"
+  
+  WAIT 5  
+  hFile = OPEN "/tmp/eccheck" FOR READ 
+  WHILE NOT Eof(hFile)
+    LINE INPUT #hFile, sLine
+    IF sLine = "Online" THEN 
+      onofflabel.Text = "Online"
+      onofflabel.ForeColor = 65280 
+      BrewButton.Enabled = TRUE
+    ELSE IF sLine = "Offline" THEN 
+      onofflabel.Text = "Offline"
+      onofflabel.ForeColor = &HFF0000
+      WaterLabel.Text = "Offline"
+      waterLabel.ForeColor = &HFF0000
+      StatusLabel.Text = "Offline"
+      StatusLabel.ForeColor = &HFF0000
+      BrewButton.Enabled = FALSE
+    ELSE IF sLine = "Water" THEN
+      LINE INPUT #hFile, sLine
+      IF sLine = "0" THEN 
+        WaterLabel.Text = "Empty"
+        WaterLabel.ForeColor = &HFF0000
+        BrewButton.Enabled = FALSE
+      ELSE IF sLine = "20" THEN 
+        WaterLabel.Text = "2 Cups"
+        WaterLabel.ForeColor = 0
+        BrewButton.Enabled = TRUE
+      ELSE IF sLine = "30" THEN 
+        WaterLabel.Text = "3 Cups"
+        WaterLabel.ForeColor = 0
+        BrewButton.Enabled = TRUE
+      ELSE IF sLine = "40" THEN 
+        WaterLabel.Text = "4 Cups"
+        WaterLabel.ForeColor = 0
+        BrewButton.Enabled = TRUE
+      ELSE 
+        WaterLabel.Text = "What?"
+        WaterLabel.ForeColor = 0
+      ENDIF
+    ELSE IF sLine = "Status" THEN 
+      LINE INPUT #hFile, sLine
+      IF sLine = "a0" THEN 
+        StatusLabel.Text = "Idle"
+        StatusLabel.ForeColor = 0
+      ELSE IF sLine = "a2" THEN 
+        StatusLabel.Text = "Brewing..."
+        StatusLabel.ForeColor = 0
+      ELSE 
+        StatusLabel.Text = "Idle"
+        StatusLabel.ForeColor = 0
+      ENDIF 
+    ENDIF
+  WEND
+  CLOSE #hFile
+  SHELL "rm /tmp/eccheck"
+END
+
+PUBLIC SUB BrewButton_Click()
+  SHELL "ecbrew"
+  StatusLabel.Text = "Brewing..."
+END
